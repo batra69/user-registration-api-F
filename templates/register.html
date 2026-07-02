@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Registration</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+  .form-card {
+    max-width: 800px; margin: 40px auto; background: #fff; border-radius: 10px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.08); padding: 32px 36px;
+  }
+  .form-card h2 {
+    text-align: center; font-weight: 600; margin-bottom: 30px; color: #2c3e50;
+    border-bottom: 2px solid #eaeaea; padding-bottom: 16px;
+  }
+  label.form-label { font-weight: 500; color: #34495e; }
+  .required::after { content: " *"; color: #e74c3c; }
+  .invalid-feedback { display: none; }
+  .show-error .invalid-feedback { display: block; }
+  .show-error .form-control, .show-error .form-select { border-color: #e74c3c; }
+
+  .hobby-box {
+    display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ccd6e0;
+    border-radius: 6px; padding: 8px 14px; margin-right: 10px; margin-bottom: 10px;
+    cursor: pointer; transition: all .15s ease;
+  }
+  .hobby-box input[type="checkbox"] { width: 18px; height: 18px; border-radius: 3px; cursor: pointer; }
+  .hobby-box:has(input:checked) { background: #eaf3ff; border-color: #4a90e2; }
+
+  .photo-box {
+    width: 160px; height: 160px; border: 2px dashed #b8c2cc; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; background: #fafbfc;
+    overflow: hidden; color: #9aa5b1; font-size: 13px; text-align: center;
+  }
+  .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+  .section-note { font-size: 12px; color: #8a94a0; }
+</style>
+</head>
+<body>
+
+<div class="form-card">
+  <h2>User Registration</h2>
+
+  <form id="registrationForm" action="/submit" method="POST" enctype="multipart/form-data" novalidate>
+
+    <!-- Name -->
+    <div class="mb-3">
+      <label for="empName" class="form-label required">Employee Name</label>
+      <input type="text" class="form-control" id="empName" name="name" maxlength="25" placeholder="Enter employee name">
+      <div class="invalid-feedback">Employee name is mandatory (max 25 characters).</div>
+    </div>
+
+    <!-- Gender -->
+    <div class="mb-3">
+      <label class="form-label required d-block">Gender</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="gender" id="genderMale" value="Male">
+        <label class="form-check-label" for="genderMale">Male</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="Female">
+        <label class="form-check-label" for="genderFemale">Female</label>
+      </div>
+      <div class="invalid-feedback">Please select a gender.</div>
+    </div>
+
+    <!-- DOB -->
+    <div class="mb-3">
+      <label for="dob" class="form-label required">Date of Birth (DD/MM/YYYY)</label>
+      <input type="text" class="form-control" id="dob" name="dob" placeholder="DD/MM/YYYY" maxlength="10">
+      <div class="invalid-feedback">Enter a valid date of birth in DD/MM/YYYY format.</div>
+    </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+      <label for="email" class="form-label">Email Address</label>
+      <input type="text" class="form-control" id="email" name="email" placeholder="name@example.com">
+      <div class="section-note">Optional, but must be a valid email format if provided.</div>
+      <div class="invalid-feedback">Please enter a valid email address.</div>
+    </div>
+
+    <!-- Contact -->
+    <div class="mb-3">
+      <label class="form-label required d-block">Contact Number</label>
+      <div class="row g-2">
+        <div class="col-md-6">
+          <input type="text" class="form-control" id="mobileNo" name="mobile" placeholder="Mobile Number">
+        </div>
+        <div class="col-md-6">
+          <input type="text" class="form-control" id="phoneNo" name="phone" placeholder="Phone Number (Landline)">
+        </div>
+      </div>
+      <div class="section-note">Fill at least one of the two fields (Mobile or Phone).</div>
+      <div class="invalid-feedback">Please provide either a mobile number or a phone number.</div>
+    </div>
+
+    <!-- State -->
+    <div class="mb-3">
+      <label for="state" class="form-label required">State</label>
+      <select class="form-select" id="state" name="state">
+        <option value="">Select State</option>
+      </select>
+      <div class="invalid-feedback">Please select a state.</div>
+    </div>
+
+    <!-- City -->
+    <div class="mb-3">
+      <label for="city" class="form-label">City</label>
+      <select class="form-select" id="city" name="city" disabled>
+        <option value="">Select State First</option>
+      </select>
+    </div>
+
+    <!-- Hobbies -->
+    <div class="mb-3">
+      <label class="form-label d-block">Hobbies</label>
+      <label class="hobby-box"><input type="checkbox" name="hobby" value="Chess"> Chess</label>
+      <label class="hobby-box"><input type="checkbox" name="hobby" value="Cricket"> Cricket</label>
+      <label class="hobby-box"><input type="checkbox" name="hobby" value="Football"> Football</label>
+      <label class="hobby-box"><input type="checkbox" name="hobby" value="Hockey"> Hockey</label>
+    </div>
+
+    <!-- Photo -->
+    <div class="mb-4">
+      <label class="form-label d-block">Photo</label>
+      <div class="d-flex align-items-center gap-3">
+        <div class="photo-box" id="photoPreviewBox">No photo selected</div>
+        <div>
+          <input type="file" id="photoInput" name="photo" accept="image/jpeg, image/png" class="d-none">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="browseBtn">Browse...</button>
+          <div class="section-note mt-1">Optional. JPEG or PNG only.</div>
+          <div class="text-danger section-note d-none" id="photoError">Only JPEG or PNG files are allowed.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div class="mb-4 form-check">
+      <input type="checkbox" class="form-check-input" id="termsCheck">
+      <label class="form-check-label" for="termsCheck">I agree to the Terms and Conditions</label>
+    </div>
+    <div class="text-danger section-note mb-3 d-none" id="termsError"></div>
+
+    <!-- Submit -->
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary px-5" id="submitBtn">Submit</button>
+    </div>
+
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+// Only Delhi and Uttar Pradesh, as specified
+const stateCityData = {
+  "Delhi": ["Delhi", "New Delhi"],
+  "Uttar Pradesh": ["Noida", "Lucknow"]
+};
+
+const stateSelect = document.getElementById('state');
+Object.keys(stateCityData).forEach(st => {
+  const opt = document.createElement('option');
+  opt.value = st; opt.textContent = st;
+  stateSelect.appendChild(opt);
+});
+
+const citySelect = document.getElementById('city');
+stateSelect.addEventListener('change', () => {
+  citySelect.innerHTML = '';
+  if (stateSelect.value) {
+    citySelect.disabled = false;
+    const def = document.createElement('option');
+    def.value = ''; def.textContent = 'Select City';
+    citySelect.appendChild(def);
+    stateCityData[stateSelect.value].forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      citySelect.appendChild(opt);
+    });
+  } else {
+    citySelect.disabled = true;
+    citySelect.innerHTML = '<option value="">Select State First</option>';
+  }
+});
+
+// Photo upload
+const browseBtn = document.getElementById('browseBtn');
+const photoInput = document.getElementById('photoInput');
+const photoPreviewBox = document.getElementById('photoPreviewBox');
+const photoError = document.getElementById('photoError');
+let photoValid = true;
+
+browseBtn.addEventListener('click', () => photoInput.click());
+
+photoInput.addEventListener('change', () => {
+  const file = photoInput.files[0];
+  photoError.classList.add('d-none');
+  if (!file) {
+    photoValid = true;
+    photoPreviewBox.innerHTML = 'No photo selected';
+    return;
+  }
+  const allowedTypes = ['image/jpeg', 'image/png'];
+  if (!allowedTypes.includes(file.type)) {
+    photoValid = false;
+    photoError.classList.remove('d-none');
+    photoPreviewBox.innerHTML = 'No photo selected';
+    photoInput.value = '';
+    return;
+  }
+  photoValid = true;
+  const reader = new FileReader();
+  reader.onload = e => { photoPreviewBox.innerHTML = `<img src="${e.target.result}" alt="preview">`; };
+  reader.readAsDataURL(file);
+});
+
+const empName = document.getElementById('empName');
+const dob = document.getElementById('dob');
+const email = document.getElementById('email');
+const mobileNo = document.getElementById('mobileNo');
+const phoneNo = document.getElementById('phoneNo');
+const termsCheck = document.getElementById('termsCheck');
+const termsError = document.getElementById('termsError');
+
+dob.addEventListener('input', () => {
+  let v = dob.value.replace(/\D/g, '').slice(0, 8);
+  if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+  else if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+  dob.value = v;
+});
+
+function isValidDOB(value) {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return false;
+  const day = parseInt(match[1], 10), month = parseInt(match[2], 10), year = parseInt(match[3], 10);
+  if (month < 1 || month > 12) return false;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return false;
+  const today = new Date();
+  const dobDate = new Date(year, month - 1, day);
+  if (dobDate > today || year < 1900) return false;
+  return true;
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function checkMandatoryFields() {
+  const missing = [];
+  if (!empName.value.trim() || empName.value.trim().length > 25) missing.push('Employee Name (mandatory, max 25 characters)');
+  if (!document.querySelector('input[name="gender"]:checked')) missing.push('Gender');
+  if (!isValidDOB(dob.value.trim())) missing.push('Date of Birth (DD/MM/YYYY)');
+  if (email.value.trim() && !isValidEmail(email.value.trim())) missing.push('Email Address (invalid format)');
+  if (!mobileNo.value.trim() && !phoneNo.value.trim()) missing.push('Contact Number (Mobile or Phone)');
+  if (!stateSelect.value) missing.push('State');
+  if (!photoValid) missing.push('Photo (must be JPEG or PNG)');
+  return { valid: missing.length === 0, missing };
+}
+
+function markFieldErrors(showAll) {
+  const pairs = [
+    [empName, !empName.value.trim() || empName.value.trim().length > 25],
+    [dob, !isValidDOB(dob.value.trim())],
+    [email, email.value.trim() !== '' && !isValidEmail(email.value.trim())],
+    [stateSelect, !stateSelect.value]
+  ];
+  pairs.forEach(([el, invalid]) => {
+    const wrapper = el.closest('.mb-3') || el.closest('.mb-4');
+    if (showAll && invalid) wrapper.classList.add('show-error');
+    else wrapper.classList.remove('show-error');
+  });
+
+  const contactInvalid = !mobileNo.value.trim() && !phoneNo.value.trim();
+  const contactWrapper = mobileNo.closest('.mb-3');
+  if (showAll && contactInvalid) contactWrapper.classList.add('show-error');
+  else contactWrapper.classList.remove('show-error');
+
+  const genderInvalid = !document.querySelector('input[name="gender"]:checked');
+  const genderWrapper = document.querySelector('input[name="gender"]').closest('.mb-3');
+  if (showAll && genderInvalid) genderWrapper.classList.add('show-error');
+  else genderWrapper.classList.remove('show-error');
+}
+
+document.getElementById('registrationForm').addEventListener('submit', function (e) {
+  const result = checkMandatoryFields();
+  const termsOk = termsCheck.checked;
+  const allMissing = [...result.missing];
+  if (!termsOk) allMissing.push('You must check "I agree to the Terms and Conditions"');
+
+  if (allMissing.length > 0) {
+    e.preventDefault();
+    markFieldErrors(true);
+    termsError.classList.remove('d-none');
+    termsError.innerHTML = 'Please fix the following field(s):<br>&bull; ' + allMissing.join('<br>&bull; ');
+
+    const firstErrorField = document.querySelector('.show-error');
+    if (firstErrorField) {
+      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const focusable = firstErrorField.querySelector('input, select, textarea');
+      if (focusable) focusable.focus({ preventScroll: true });
+    } else {
+      termsCheck.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      termsCheck.focus({ preventScroll: true });
+    }
+    return;
+  }
+
+  // Valid: let the browser submit the form normally to /submit (Flask handles redirect to /listing)
+  termsError.classList.add('d-none');
+  markFieldErrors(false);
+});
+</script>
+</body>
+</html>

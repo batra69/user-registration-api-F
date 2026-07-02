@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registered Employees</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+  .list-card {
+    max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 10px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.08); padding: 32px 36px;
+  }
+  .list-card h2 {
+    text-align: center; font-weight: 600; margin-bottom: 26px; color: #2c3e50;
+    border-bottom: 2px solid #eaeaea; padding-bottom: 16px;
+  }
+  .photo-thumb {
+    width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0;
+  }
+  .no-photo { font-size: 12px; color: #9aa5b1; }
+  #recordsTable a { text-decoration: none; font-weight: 500; }
+  th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+  th.sortable:hover { background: #eef2f6; }
+  th.sortable .sort-arrow { font-size: 11px; margin-left: 4px; color: #9aa5b1; }
+  th.sortable.active .sort-arrow { color: #2c3e50; }
+</style>
+</head>
+<body>
+
+<div class="list-card">
+  <h2>Registered Employees</h2>
+
+  <!-- Filters -->
+  <div class="row g-2 mb-4">
+    <div class="col-md-4">
+      <input type="text" id="filterName" class="form-control" placeholder="Search by employee name">
+    </div>
+    <div class="col-md-3">
+      <select id="filterGender" class="form-select">
+        <option value=""> Genders</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select id="filterState" class="form-select">
+        <option value="">States</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Uttar Pradesh">Uttar Pradesh</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="button" id="searchBtn" class="btn btn-primary w-100">Search</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle" id="recordsTable">
+      <thead class="table-light">
+        <tr>
+          <th class="sortable" data-sort="reg_no">Reg. No <span class="sort-arrow">↕</span></th>
+          <th>Photo</th>
+          <th class="sortable" data-sort="name">Name <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="gender">Gender <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="state">State <span class="sort-arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="recordsBody"></tbody>
+    </table>
+  </div>
+  <div id="noRecords" class="text-center text-muted py-3 d-none">No matching records found.</div>
+
+  <!-- Pagination -->
+  <nav id="paginationNav" class="d-flex justify-content-between align-items-center mt-3">
+    <span id="resultsSummary" class="text-muted small"></span>
+    <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+  </nav>
+
+  <div class="text-center mt-3">
+    <a href="/" class="btn btn-outline-primary btn-sm">+ Register New Employee</a>
+  </div>
+</div>
+
+<script>
+const filterName = document.getElementById('filterName');
+const filterGender = document.getElementById('filterGender');
+const filterState = document.getElementById('filterState');
+const searchBtn = document.getElementById('searchBtn');
+const recordsBody = document.getElementById('recordsBody');
+const noRecords = document.getElementById('noRecords');
+const resultsSummary = document.getElementById('resultsSummary');
+const paginationControls = document.getElementById('paginationControls');
+const sortableHeaders = document.querySelectorAll('th.sortable');
+
+const PAGE_SIZE = 10;
+
+// Current query state — every change here goes back through the API
+let state = {
+  page: 1,
+  sort_by: 'reg_no',
+  sort_order: 'desc'
+};
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+// ---------- Single API call drives search + filter + sort + paging ----------
+function loadRecords() {
+  const params = new URLSearchParams();
+  if (filterName.value.trim()) params.append('name', filterName.value.trim());
+  if (filterGender.value) params.append('gender', filterGender.value);
+  if (filterState.value) params.append('state', filterState.value);
+  params.append('sort_by', state.sort_by);
+  params.append('sort_order', state.sort_order);
+  params.append('page', state.page);
+  params.append('page_size', PAGE_SIZE);
+
+  fetch('/api/records?' + params.toString())
+    .then(res => res.json())
+    .then(data => {
+      renderTable(data.records);
+      renderPagination(data.page, data.total_pages, data.total);
+      updateSortIndicators();
+    })
+    .catch(err => console.error('Failed to load records:', err));
+}
+
+function renderTable(records) {
+  recordsBody.innerHTML = '';
+
+  if (!records || records.length === 0) {
+    noRecords.classList.remove('d-none');
+    return;
+  }
+  noRecords.classList.add('d-none');
+
+  records.forEach(r => {
+    const tr = document.createElement('tr');
+
+    const photoHtml = r.photo
+      ? `<img src="/static/uploads/${escapeHtml(r.photo)}" class="photo-thumb" alt="photo">`
+      : '<span class="no-photo">No Photo</span>';
+
+    const nameHtml = r.email
+      ? `<a href="mailto:${escapeHtml(r.email)}">${escapeHtml(r.name)}</a>`
+      : escapeHtml(r.name);
+
+    tr.innerHTML = `
+      <td>${r.reg_no}</td>
+      <td>${photoHtml}</td>
+      <td>${nameHtml}</td>
+      <td>${escapeHtml(r.gender)}</td>
+      <td>${escapeHtml(r.state)}</td>
+    `;
+    recordsBody.appendChild(tr);
+  });
+}
+
+function renderPagination(page, totalPages, total) {
+  state.page = page;
+  resultsSummary.textContent = total > 0
+    ? `${total} record${total === 1 ? '' : 's'} found — page ${page} of ${totalPages}`
+    : '';
+
+  paginationControls.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  function addPageItem(label, targetPage, disabled, active) {
+    const li = document.createElement('li');
+    li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.textContent = label;
+    if (!disabled && !active) {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        state.page = targetPage;
+        loadRecords();
+      });
+    }
+    li.appendChild(a);
+    paginationControls.appendChild(li);
+  }
+
+  addPageItem('Previous', page - 1, page === 1, false);
+  for (let p = 1; p <= totalPages; p++) {
+    addPageItem(String(p), p, false, p === page);
+  }
+  addPageItem('Next', page + 1, page === totalPages, false);
+}
+
+function updateSortIndicators() {
+  sortableHeaders.forEach(th => {
+    const col = th.dataset.sort;
+    const arrow = th.querySelector('.sort-arrow');
+    if (col === state.sort_by) {
+      th.classList.add('active');
+      arrow.textContent = state.sort_order === 'asc' ? '↑' : '↓';
+    } else {
+      th.classList.remove('active');
+      arrow.textContent = '↕';
+    }
+  });
+}
+
+// ---------- Sorting: click a column header ----------
+sortableHeaders.forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.sort_by === col) {
+      state.sort_order = state.sort_order === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sort_by = col;
+      state.sort_order = 'asc';
+    }
+    state.page = 1;
+    loadRecords();
+  });
+});
+
+// ---------- Search: only fires on button click or Enter in the name box ----------
+searchBtn.addEventListener('click', () => {
+  state.page = 1;
+  loadRecords();
+});
+filterName.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    state.page = 1;
+    loadRecords();
+  }
+});
+
+// Initial load — no filters applied, default sort, page 1
+loadRecords();
+</script>
+</body>
+</html>
